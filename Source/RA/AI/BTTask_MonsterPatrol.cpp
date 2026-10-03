@@ -20,7 +20,7 @@ EBTNodeResult::Type UBTTask_MonsterPatrol::ExecuteTask(
 	UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	// Nexus 타겟팅 해주세요
-	URAWaveSubSystem* WaveSubSystem = GetWorld()->GetGameInstance()->GetSubsystem<URAWaveSubSystem>();
+	URAWaveSubSystem* WaveSubSystem = GetWorld()->GetSubsystem<URAWaveSubSystem>();
 	ARANexus* Nexus = WaveSubSystem->GetNexus();
 	const FVector NexusLoctaion = Nexus->GetActorLocation();
 
