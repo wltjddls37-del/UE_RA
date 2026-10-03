@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Data/RABaseStatRow.h"
 #include "RACharacter.generated.h"
 
-class UInputMappingContext;
-class USpringArmComponent;
-class UCameraComponent;
-class UAnimMontage;
-class UInputAction;
-struct  FInputActionValue;
+class ARACharacter;
+class URAStatComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterDied, ARACharacter*, Character);
+
+// 플레이어, 몬스터 공용 부모
 UCLASS()
 class RA_API ARACharacter : public ACharacter
 {
@@ -22,41 +22,31 @@ public:
 	// Sets default values for this character's properties
 	ARACharacter();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
-	virtual void NotifyControllerChanged();
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	void Move(const FInputActionValue& InValue);
-	void Look(const FInputActionValue& InValue);
-	void Attack();
+	// 체력이 0 이 되면 호출, 자식 클래스에서 override 하여 사망 애니메이션 등을 추가
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	virtual void Die();
 
-protected:		
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputMappingContext> DefaultMappingContext;
+	UFUNCTION(BlueprintPure, Category = "Character")
+	bool IsDead() const { return bIsDead; }
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> MoveAction;
+	UFUNCTION(BlueprintPure, Category = "Character")
+	URAStatComponent* GetStatComponent() const { return StatComponent; }
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> LookAction;
-		
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> AttackAction;
+	UPROPERTY(BlueprintAssignable, Category = "Character")
+	FOnCharacterDied OnCharacterDied;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UAnimMontage> AttackMontage;
+private:
+	UFUNCTION()
+	void HandleStatChanged(ERAStatType StatType, float CurrentValue, float BaseValue);
 
 protected:
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USpringArmComponent>	SpringArmComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<URAStatComponent> StatComponent;
 
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UCameraComponent> CameraComponent;
+private:
+	bool bIsDead = false;
 };
