@@ -26,7 +26,9 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -37,21 +39,29 @@ public:
 	void Look(const FInputActionValue& InValue);
 	void Attack();
 
-protected:		
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RA")
+private:
+	void PlayNextAttackMontage();
+	void ResetAttack();
+
+	UFUNCTION()
+	void HandleMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted);
+
+protected:
+	UPROPERTY(EditAnywhere, Category = "RA")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RA")
+	UPROPERTY(EditAnywhere, Category = "RA")
 	TObjectPtr<UInputAction> MoveAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RA")
+	UPROPERTY(EditAnywhere, Category = "RA")
 	TObjectPtr<UInputAction> LookAction;
 		
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RA")
+	UPROPERTY(EditAnywhere, Category = "RA")
 	TObjectPtr<UInputAction> AttackAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RA")
-	TObjectPtr<UAnimMontage> AttackMontage;
+	// 공격 입력마다 Index 순서대로 재생
+	UPROPERTY(EditAnywhere, Category = "RA")
+	TArray<TObjectPtr<UAnimMontage>> AttackMontageArray;
 
 protected:
 	UPROPERTY(VisibleAnywhere)
@@ -59,4 +69,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> CameraComponent;
+
+private:
+	// 재생 중인 공격 몽타주, 없으면 nullptr
+	UPROPERTY()
+	TObjectPtr<UAnimMontage> CurrentAttackMontage;
+
+	// 다음에 재생할 AttackMontageArray Index
+	int32 AttackIndex = 0;
+
+	// 재생 중에 들어온 공격 입력, 현재 몽타주가 끝나면 다음 몽타주 재생
+	bool bAttackInputQueued = false;
 };

@@ -16,7 +16,14 @@ void ARACharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	StatComponent->OnStatChanged.AddDynamic(this, &ARACharacter::HandleStatChanged);
+	StatComponent->OnUpdateStat.AddDynamic(this, &ARACharacter::HandleStatChanged);
+}
+
+void ARACharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	StatComponent->OnUpdateStat.RemoveDynamic(this, &ARACharacter::HandleStatChanged);
+
+	Super::EndPlay(EndPlayReason);
 }
 
 float ARACharacter::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

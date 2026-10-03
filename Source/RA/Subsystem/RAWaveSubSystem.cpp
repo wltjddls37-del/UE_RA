@@ -21,7 +21,18 @@ void URAWaveSubSystem::Deinitialize()
 		World->GetTimerManager().ClearTimer(WaveTimerHandle);
 	}
 
+	// 레벨 종료 등으로 사망하지 않고 남은 몬스터의 바인딩 해제
+	for (ARAMonster* Monster : AliveMonsterArray)
+	{
+		if (Monster)
+		{
+			Monster->OnCharacterDied.RemoveDynamic(this, &URAWaveSubSystem::HandleMonsterDied);
+		}
+	}
+
+	AliveMonsterArray.Empty();
 	SpawnerArray.Empty();
+	Nexus = nullptr;
 
 	Super::Deinitialize();
 }
@@ -44,6 +55,21 @@ void URAWaveSubSystem::UnregisterSpawner(ARASpawner* Spawner)
 	SpawnerArray.Remove(Spawner);
 }
 
+void URAWaveSubSystem::RegisterNexus(ARANexus* InNexus)
+{
+	// 넥서스는 레벨에 하나만 배치
+	ensureMsgf(Nexus == nullptr || Nexus == InNexus, TEXT("More than one RANexus placed in level."));
+	Nexus = InNexus;
+}
+
+void URAWaveSubSystem::UnregisterNexus(ARANexus* InNexus)
+{
+	if (Nexus == InNexus)
+	{
+		Nexus = nullptr;
+	}
+}
+
 int32 URAWaveSubSystem::GetTotalWaveCount() const
 {
 	int32 TotalWaveCount = 0;
@@ -59,25 +85,27 @@ int32 URAWaveSubSystem::GetTotalWaveCount() const
 
 void URAWaveSubSystem::RegisterMonster(ARAMonster* Monster)
 {
-	if (!Monster || Monster->IsDead())
+	if (Monster == nullptr || Monster->IsDead())
 	{
 		return;
 	}
 
-	++AliveMonsterCount;
-	Monster->OnCharacterDied.AddDynamic(this, &URAWaveSubSystem::HandleMonsterDied);
+	AliveMonsterArray.AddUnique(Monster);
+	Monster->OnCharacterDied.AddUniqueDynamic(this, &URAWaveSubSystem::HandleMonsterDied);
 }
 
-void URAWaveSubSystem::HandleMonsterDied(ARACharacter* Monster)
+void URAWaveSubSystem::HandleMonsterDied(ARACharacter* Character)
 {
-	if (Monster)
+	ARAMonster* Monster = Cast<ARAMonster>(Character);
+	if (Monster == nullptr)
 	{
-		Monster->OnCharacterDied.RemoveDynamic(this, &URAWaveSubSystem::HandleMonsterDied);
+		return;
 	}
 
-	AliveMonsterCount = FMath::Max(AliveMonsterCount - 1, 0);
+	Monster->OnCharacterDied.RemoveDynamic(this, &URAWaveSubSystem::HandleMonsterDied);
+	AliveMonsterArray.Remove(Monster);
 
-	if (AliveMonsterCount == 0)
+	if (AliveMonsterArray.IsEmpty())
 	{
 		EndWave(ERAWaveEndReason::AllMonstersDead);
 	}
@@ -91,7 +119,7 @@ void URAWaveSubSystem::EndWave(ERAWaveEndReason Reason)
 	}
 
 	// 넥서스 파괴는 웨이브 진행 여부와 관계없이 게임 종료
-	if (Reason == ERAWaveEndReason::AllMonstersDead && !bIsWaveInProgress)
+	if (Reason == ERAWaveEndReason::AllMonstersDead && bIsWaveInProgress == false)
 	{
 		return;
 	}
@@ -141,7 +169,7 @@ void URAWaveSubSystem::StartNextWave()
 	}
 
 	// 생성된 몬스터가 없으면 바로 종료
-	if (AliveMonsterCount == 0)
+	if (AliveMonsterArray.IsEmpty())
 	{
 		EndWave(ERAWaveEndReason::AllMonstersDead);
 	}

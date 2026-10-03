@@ -21,9 +21,9 @@ struct FRAStat
 	float CurrentValue = 100.f;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChanged, ERAStatType, StatType, float, CurrentValue, float, BaseValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnUpdateStat, ERAStatType, StatType, float, CurrentValue, float, BaseValue);
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS()
 class RA_API URAStatComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -32,22 +32,17 @@ public:
 	// Sets default values for this component's properties
 	URAStatComponent();
 
-	UFUNCTION(BlueprintPure, Category = "Stat")
 	float GetValue(ERAStatType StatType) const;
 
-	UFUNCTION(BlueprintPure, Category = "Stat")
 	float GetBaseValue(ERAStatType StatType) const;
 
 	// CurrentValue 에 Delta 를 더한다, 0 ~ BaseValue 범위로 제한
-	UFUNCTION(BlueprintCallable, Category = "Stat")
 	void AddValue(ERAStatType StatType, float Delta);
 
 	// CurrentValue 를 BaseValue 로 되돌린다
-	UFUNCTION(BlueprintCallable, Category = "Stat")
 	void ResetValue(ERAStatType StatType);
 
-	UPROPERTY(BlueprintAssignable, Category = "Stat")
-	FOnStatChanged OnStatChanged;
+	FOnUpdateStat OnUpdateStat;
 
 protected:
 	// Called when the game starts

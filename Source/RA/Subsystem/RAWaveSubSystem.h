@@ -9,8 +9,9 @@
 class ARASpawner;
 class ARAMonster;
 class ARACharacter;
+class ARANexus;
 
-UENUM(BlueprintType)
+UENUM()
 enum class ERAWaveEndReason : uint8
 {
 	AllMonstersDead,
@@ -32,32 +33,31 @@ public:
 	void RegisterSpawner(ARASpawner* Spawner);
 	void UnregisterSpawner(ARASpawner* Spawner);
 
+	// 넥서스는 레벨에 하나, 모든 액터의 BeginPlay 이전(PostInitializeComponents)에 등록된다
+	void RegisterNexus(ARANexus* InNexus);
+	void UnregisterNexus(ARANexus* InNexus);
+
+	ARANexus* GetNexus() const { return Nexus; }
+
 	// 스포너가 몬스터를 생성할 때 호출, 살아있는 몬스터 수를 관리한다
 	void RegisterMonster(ARAMonster* Monster);
 
 	// 웨이브 종료, 넥서스가 파괴되거나 살아있는 몬스터가 모두 죽으면 호출된다
-	UFUNCTION(BlueprintCallable, Category = "Wave")
 	void EndWave(ERAWaveEndReason Reason);
 
 	// 1부터 시작, 아직 웨이브가 시작되지 않았으면 0
-	UFUNCTION(BlueprintPure, Category = "Wave")
 	int32 GetCurrentWave() const { return CurrentWave; }
 
 	// 등록된 스포너 중 가장 많은 웨이브 수
-	UFUNCTION(BlueprintPure, Category = "Wave")
 	int32 GetTotalWaveCount() const;
 
-	UFUNCTION(BlueprintPure, Category = "Wave")
-	int32 GetAliveMonsterCount() const { return AliveMonsterCount; }
+	int32 GetAliveMonsterCount() const { return AliveMonsterArray.Num(); }
 
 	// 넥서스 파괴 또는 마지막 웨이브 종료 시 true
-	UFUNCTION(BlueprintPure, Category = "Wave")
 	bool IsGameOver() const { return bIsGameOver; }
 
-	UPROPERTY(BlueprintAssignable, Category = "Wave")
 	FOnWaveStarted OnWaveStarted;
 
-	UPROPERTY(BlueprintAssignable, Category = "Wave")
 	FOnWaveEnded OnWaveEnded;
 
 protected:
@@ -67,7 +67,7 @@ private:
 	void StartNextWave();
 
 	UFUNCTION()
-	void HandleMonsterDied(ARACharacter* Monster);
+	void HandleMonsterDied(ARACharacter* Character);
 
 	// 웨이브 사이 간격 (초), DefaultGame.ini 에서 변경 가능
 	UPROPERTY(Config)
@@ -80,9 +80,14 @@ private:
 	UPROPERTY()
 	TArray<TObjectPtr<ARASpawner>> SpawnerArray;
 
-	int32 CurrentWave = 0;
+	UPROPERTY()
+	TObjectPtr<ARANexus> Nexus;
 
-	int32 AliveMonsterCount = 0;
+	// OnCharacterDied 바인딩 해제를 위해 살아있는 몬스터를 보관
+	UPROPERTY()
+	TArray<TObjectPtr<ARAMonster>> AliveMonsterArray;
+
+	int32 CurrentWave = 0;
 
 	bool bIsWaveInProgress = false;
 

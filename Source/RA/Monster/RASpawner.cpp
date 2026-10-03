@@ -56,7 +56,7 @@ int32 ARASpawner::GetWaveCount() const
 void ARASpawner::SpawnWave(int32 WaveIndex)
 {
 	const FRASpawnRow* SpawnData = GetSpawnData();
-	if (!SpawnData || !SpawnData->WaveInfoArray.IsValidIndex(WaveIndex))
+	if (SpawnData == nullptr || SpawnData->WaveInfoArray.IsValidIndex(WaveIndex) == false)
 	{
 		return;
 	}
@@ -72,7 +72,7 @@ void ARASpawner::SpawnWave(int32 WaveIndex)
 
 void ARASpawner::SpawnMonster(TSubclassOf<ARAMonster> MonsterClass)
 {
-	if (!MonsterClass)
+	if (MonsterClass == nullptr)
 	{
 		return;
 	}
@@ -82,7 +82,7 @@ void ARASpawner::SpawnMonster(TSubclassOf<ARAMonster> MonsterClass)
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	ARAMonster* Monster = GetWorld()->SpawnActor<ARAMonster>(MonsterClass, GetRandomSpawnLocation(), GetActorRotation(), SpawnParams);
-	if (!Monster)
+	if (Monster == nullptr)
 	{
 		return;
 	}

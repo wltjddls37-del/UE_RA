@@ -27,24 +27,23 @@ public:
 	virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	// 체력이 0 이 되면 호출, 자식 클래스에서 override 하여 사망 애니메이션 등을 추가
-	UFUNCTION(BlueprintCallable, Category = "Character")
 	virtual void Die();
 
-	UFUNCTION(BlueprintPure, Category = "Character")
 	bool IsDead() const { return bIsDead; }
 
-	UFUNCTION(BlueprintPure, Category = "Character")
 	URAStatComponent* GetStatComponent() const { return StatComponent; }
 
-	UPROPERTY(BlueprintAssignable, Category = "Character")
 	FOnCharacterDied OnCharacterDied;
+
+protected:
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
 	UFUNCTION()
 	void HandleStatChanged(ERAStatType StatType, float CurrentValue, float BaseValue);
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<URAStatComponent> StatComponent;
 
 private:

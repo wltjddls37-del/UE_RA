@@ -30,13 +30,13 @@ void URAStatComponent::BeginPlay()
 void URAStatComponent::LoadBaseStat()
 {
 	const URAGameDataSubsystem* GameDataSubsystem = UGameInstance::GetSubsystem<URAGameDataSubsystem>(GetWorld()->GetGameInstance());
-	if (!GameDataSubsystem)
+	if (GameDataSubsystem == nullptr)
 	{
 		return;
 	}
 
 	const FRABaseStatRow* BaseStatRow = GameDataSubsystem->GetBaseStatData(BaseStatRowName);
-	if (!BaseStatRow)
+	if (BaseStatRow == nullptr)
 	{
 		return;
 	}
@@ -62,7 +62,7 @@ float URAStatComponent::GetBaseValue(ERAStatType StatType) const
 void URAStatComponent::AddValue(ERAStatType StatType, float Delta)
 {
 	FRAStat* Stat = StatMap.Find(StatType);
-	if (!Stat)
+	if (Stat == nullptr)
 	{
 		return;
 	}
@@ -74,17 +74,17 @@ void URAStatComponent::AddValue(ERAStatType StatType, float Delta)
 	}
 
 	Stat->CurrentValue = NewValue;
-	OnStatChanged.Broadcast(StatType, Stat->CurrentValue, Stat->BaseValue);
+	OnUpdateStat.Broadcast(StatType, Stat->CurrentValue, Stat->BaseValue);
 }
 
 void URAStatComponent::ResetValue(ERAStatType StatType)
 {
 	FRAStat* Stat = StatMap.Find(StatType);
-	if (!Stat)
+	if (Stat == nullptr)
 	{
 		return;
 	}
 
 	Stat->CurrentValue = Stat->BaseValue;
-	OnStatChanged.Broadcast(StatType, Stat->CurrentValue, Stat->BaseValue);
+	OnUpdateStat.Broadcast(StatType, Stat->CurrentValue, Stat->BaseValue);
 }

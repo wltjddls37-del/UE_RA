@@ -25,13 +25,14 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
-	UFUNCTION(BlueprintPure, Category = "Nexus")
+protected:
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+public:
 	URAStatComponent* GetStatComponent() const { return StatComponent; }
 
-	UFUNCTION(BlueprintPure, Category = "Nexus")
 	bool IsDestroyed() const { return bIsDestroyed; }
 
-	UPROPERTY(BlueprintAssignable, Category = "Nexus")
 	FOnNexusDestroyed OnNexusDestroyed;
 
 private:
@@ -45,7 +46,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticMeshComponent> MeshComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<URAStatComponent> StatComponent;
 
 private:

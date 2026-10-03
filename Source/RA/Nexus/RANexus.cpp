@@ -21,7 +21,25 @@ void ARANexus::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	StatComponent->OnStatChanged.AddDynamic(this, &ARANexus::HandleStatChanged);
+	StatComponent->OnUpdateStat.AddDynamic(this, &ARANexus::HandleStatChanged);
+
+	// BeginPlay 순서와 관계없이 HUD 등에서 찾을 수 있도록 BeginPlay 이전에 등록
+	if (URAWaveSubSystem* WaveSubSystem = GetWorld()->GetSubsystem<URAWaveSubSystem>())
+	{
+		WaveSubSystem->RegisterNexus(this);
+	}
+}
+
+void ARANexus::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	StatComponent->OnUpdateStat.RemoveDynamic(this, &ARANexus::HandleStatChanged);
+
+	if (URAWaveSubSystem* WaveSubSystem = GetWorld()->GetSubsystem<URAWaveSubSystem>())
+	{
+		WaveSubSystem->UnregisterNexus(this);
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 float ARANexus::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

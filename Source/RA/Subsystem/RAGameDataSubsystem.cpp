@@ -17,7 +17,7 @@ void URAGameDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 template <typename T>
 const T* URAGameDataSubsystem::FindRow(const UDataTable* DataTable, FName RowName) const
 {
-	if (!DataTable || RowName.IsNone())
+	if (DataTable == nullptr || RowName.IsNone())
 	{
 		return nullptr;
 	}

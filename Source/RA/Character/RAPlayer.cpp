@@ -34,7 +34,21 @@ ARAPlayer::ARAPlayer()
 void ARAPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		AnimInstance->OnMontageBlendingOut.AddDynamic(this, &ARAPlayer::HandleMontageBlendingOut);
+	}
+}
+
+void ARAPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		AnimInstance->OnMontageBlendingOut.RemoveDynamic(this, &ARAPlayer::HandleMontageBlendingOut);
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 // Called every frame
@@ -97,11 +111,57 @@ void ARAPlayer::Look(const FInputActionValue& InValue)
 
 void ARAPlayer::Attack()
 {
-	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	if (AttackMontageArray.IsEmpty())
 	{
-		if (AnimInstance->Montage_IsPlaying(AttackMontage) == false)
-		{
-			PlayAnimMontage(AttackMontage);
-		}
+		return;
 	}
+
+	// 재생 중인 몽타주는 끊지 않고, 끝난 뒤 다음 몽타주를 재생하도록 입력만 저장
+	if (CurrentAttackMontage)
+	{
+		bAttackInputQueued = true;
+		return;
+	}
+
+	PlayNextAttackMontage();
+}
+
+void ARAPlayer::PlayNextAttackMontage()
+{
+	bAttackInputQueued = false;
+
+	UAnimMontage* NextMontage = AttackMontageArray[AttackIndex];
+	AttackIndex = (AttackIndex + 1) % AttackMontageArray.Num();
+
+	// 재생 중 이전 몽타주의 BlendingOut 콜백이 다시 들어와도 무시되도록 재생 전에 갱신
+	CurrentAttackMontage = NextMontage;
+
+	if (NextMontage == nullptr || PlayAnimMontage(NextMontage) <= 0.f)
+	{
+		ResetAttack();
+	}
+}
+
+void ARAPlayer::ResetAttack()
+{
+	CurrentAttackMontage = nullptr;
+	AttackIndex = 0;
+	bAttackInputQueued = false;
+}
+
+void ARAPlayer::HandleMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == nullptr || Montage != CurrentAttackMontage)
+	{
+		return;
+	}
+
+	// 다른 몽타주에 의해 끊겼거나 추가 입력이 없으면 콤보 종료, 다음 공격은 처음부터
+	if (bInterrupted || bAttackInputQueued == false)
+	{
+		ResetAttack();
+		return;
+	}
+
+	PlayNextAttackMontage();
 }
