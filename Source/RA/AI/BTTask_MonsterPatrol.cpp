@@ -5,8 +5,7 @@
 #include "NavigationSystem.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "RA/Subsystem/RAWaveSubSystem.h"
-#include "Nexus/RANexus.h"
+#include "AI/RAMonsterAIUtil.h"
 
 UBTTask_MonsterPatrol::UBTTask_MonsterPatrol()
 {
@@ -19,11 +18,11 @@ UBTTask_MonsterPatrol::UBTTask_MonsterPatrol()
 EBTNodeResult::Type UBTTask_MonsterPatrol::ExecuteTask(
 	UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	// Nexus 타겟팅 해주세요
-	URAWaveSubSystem* WaveSubSystem = GetWorld()->GetSubsystem<URAWaveSubSystem>();
-	ARANexus* Nexus = WaveSubSystem->GetNexus();
-	const FVector NexusLoctaion = Nexus->GetActorLocation();
+	// 넥서스를 타겟으로 지정했으면 순찰하지 않는다 -> 다시 Trace 부터 실행
+	if (RAMonsterAI::EnsureNexusTarget(OwnerComp))
+		return EBTNodeResult::Failed;
 
+	// 넥서스가 없을 때(테스트 레벨 등)만 주변을 순찰한다.
 	AAIController* AIController = OwnerComp.GetAIOwner();
 
 	if (!AIController)

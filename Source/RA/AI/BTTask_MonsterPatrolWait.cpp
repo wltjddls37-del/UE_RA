@@ -1,6 +1,7 @@
 #include "BTTask_MonsterPatrolWait.h"
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "AI/RAMonsterAIUtil.h"
 
 UBTTask_MonsterPatrolWait::UBTTask_MonsterPatrolWait()
 {
@@ -21,9 +22,8 @@ EBTNodeResult::Type UBTTask_MonsterPatrolWait::ExecuteTask(
 	if (!AIController || !AIController->GetPawn())
 		return EBTNodeResult::Failed;
 
-	UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
-
-	if (BlackboardComp && BlackboardComp->GetValueAsObject(TEXT("Target")))
+	// 넥서스를 타겟으로 지정했으면 대기하지 않는다
+	if (RAMonsterAI::EnsureNexusTarget(OwnerComp))
 		return EBTNodeResult::Failed;
 
 	FPatrolWaitMemory* Memory = (FPatrolWaitMemory*)NodeMemory;

@@ -88,3 +88,13 @@ void URAStatComponent::ResetValue(ERAStatType StatType)
 	Stat->CurrentValue = Stat->BaseValue;
 	OnUpdateStat.Broadcast(StatType, Stat->CurrentValue, Stat->BaseValue);
 }
+
+void URAStatComponent::AddBaseValue(ERAStatType StatType, float Delta)
+{
+	FRAStat& Stat = StatMap.FindOrAdd(StatType);
+
+	Stat.BaseValue = FMath::Max(0.f, Stat.BaseValue + Delta);
+	Stat.CurrentValue = FMath::Clamp(Stat.CurrentValue + Delta, 0.f, Stat.BaseValue);
+
+	OnUpdateStat.Broadcast(StatType, Stat.CurrentValue, Stat.BaseValue);
+}

@@ -42,6 +42,9 @@ public:
 	// CurrentValue 를 BaseValue 로 되돌린다
 	void ResetValue(ERAStatType StatType);
 
+	// 능력치 강화, BaseValue 와 CurrentValue 를 함께 Delta 만큼 올린다
+	void AddBaseValue(ERAStatType StatType, float Delta);
+
 	FOnUpdateStat OnUpdateStat;
 
 protected:

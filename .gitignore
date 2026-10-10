@@ -75,4 +75,8 @@ Plugins/**/Intermediate/*
 # Cache files for the editor to use
 DerivedDataCache/*
 
-/Content/Paragon*/
+/Content/Paragon*/**
+# 직접 수정한 벨리카 몽타주는 올린다 (Fire Projectile 노티파이)
+!/Content/ParagonLtBelica/**/
+!/Content/ParagonLtBelica/Characters/Heroes/Belica/Animations/Primary_Fire_Med_Montage.uasset
+/Content/Fab/

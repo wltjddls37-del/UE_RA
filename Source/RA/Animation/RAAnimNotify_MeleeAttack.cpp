@@ -10,6 +10,7 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Monster/RAMonster.h"
+#include "Character/RAPlayer.h"
 
 void URAAnimNotify_MeleeAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
@@ -55,8 +56,19 @@ void URAAnimNotify_MeleeAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSe
 	}
 
 	const float Damage = Attacker->GetStatComponent()->GetValue(ERAStatType::AttackPower);
+
+	ARAPlayer* Player = Cast<ARAPlayer>(Attacker);
+
 	for (ARAMonster* Monster : HitMonsterSet)
 	{
+		const bool bWasAlive = Monster->IsDead() == false;
+
 		UGameplayStatics::ApplyDamage(Monster, Damage, Attacker->GetController(), Attacker, nullptr);
+
+		// 이번 공격으로 죽었으면 플레이어 처치 수 증가
+		if (Player && bWasAlive && Monster->IsDead())
+		{
+			Player->AddKill();
+		}
 	}
 }
